@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 
-# CLASSES DE NEGÓCIO
+#ABSTRAÇÃO
 
 class Conta:
     """Classe base que representa uma conta bancária."""
@@ -38,8 +38,7 @@ class Conta:
     def tipo(self):
         return "Conta"
 
-    # ---------------- Operações ----------------
-
+    #ENCAPSULAMENTO
     def _registrar_transacao(self, descricao, valor):
         agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
@@ -106,16 +105,13 @@ class Conta:
         return self._extrato
 
 
+#HERANÇA
+
 class ContaPF(Conta):
     """Conta de Pessoa Física."""
 
     def __init__(self, numero, cliente, cpf, idade, saldo=0.0):
-        super().__init__(
-            numero,
-            cliente,
-            cpf,
-            saldo
-        )
+        super().__init__(numero,cliente,cpf,saldo)
 
         self._idade = idade
 
@@ -143,7 +139,6 @@ class ContaPJ(Conta):
     def tipo(self):
         return "PJ"
 
-
 # BANCO
 
 class Banco:
@@ -156,6 +151,7 @@ class Banco:
         self._contas = []
         self._proximo_numero = self.NUMERO_INICIAL
 
+    # ABSTRAÇÃO
     @property
     def total_contas(self):
         return len(self._contas)
@@ -172,20 +168,37 @@ class Banco:
         if cpf == cpf[0] * 11:
             return False
 
-    soma = 0
+        soma = 0
 
-    for i in range(9):
-        soma += int(cpf[i]) * (10 - i)
+        for i in range(9):
+            soma += int(cpf[i]) * (10 - i)
 
-    resto = soma % 11
+        resto = soma % 11
 
-    if resto < 2:
-        digito = 0
-    else:
-        digito = 11 - resto
+        if resto < 2:
+            digito = 0
+        else:
+            digito = 11 - resto
 
-    if digito != int(cpf[9]):
+        if digito != int(cpf[9]):
+            return False
 
+        soma = 0
+
+        for i in range(10):
+            soma += int(cpf[i]) * (11 - i)
+
+        resto = soma % 11
+
+        if resto < 2:
+            segundo = 0
+        else:
+            segundo = 11 - resto
+
+        if segundo != int(cpf[10]):
+            return False
+
+        return True
 
     @staticmethod
     def validar_cnpj(cnpj):
@@ -235,6 +248,7 @@ class Banco:
 
         return None
 
+
     def listar_contas(self):
         return self._contas
 
@@ -268,7 +282,7 @@ class InterfaceGrafica:
         estilo.configure("Subtitulo.TLabel",font=("Arial", 13, "bold"),foreground="#17365D")
         estilo.configure("Botao.TButton",font=("Arial", 11, "bold"),padding=10)
 
-    # INTERFACE PRINCIPAL
+    # TELA PRINCIPAL
 
     def criar_interface(self):
 
@@ -280,7 +294,6 @@ class InterfaceGrafica:
         titulo = tk.Label(cabecalho,text="🏦 SISTEMA BANCÁRIO",font=("Arial", 24, "bold"),fg="white",bg="#17365D")
         titulo.pack(pady=25)
 
-        # Área principal
         conteudo = tk.Frame(self.janela,bg="#F2F5F9")
 
         conteudo.pack(fill="both",expand=True)
@@ -288,95 +301,27 @@ class InterfaceGrafica:
         texto = tk.Label(conteudo,text="Escolha uma operação",font=("Arial", 18, "bold"),bg="#F2F5F9",fg="#17365D")
         texto.pack(pady=30)
 
-        # Botões
         botoes = tk.Frame(conteudo,bg="#F2F5F9")
 
         botoes.pack()
 
-        self.criar_botao(
-            botoes,
-            "👤 Cadastro PF/PJ",
-            self.tela_cadastro,
-            0,
-            0
-        )
+        self.criar_botao(botoes,"👤 Cadastro PF/PJ",self.tela_cadastro,0,0)
+        self.criar_botao(botoes,"💰 Operações",self.tela_operacoes,0,1)
+        self.criar_botao(botoes,"📋 Contas cadastradas",self.tela_contas,1,0)
+        self.criar_botao(botoes,"📄 Extrato",self.tela_extrato,1,1)
+        self.criar_botao(botoes,"❌ Sair",self.janela.destroy,2,0)
 
-        self.criar_botao(
-            botoes,
-            "💰 Operações",
-            self.tela_operacoes,
-            0,
-            1
-        )
+        rodape = tk.Label(conteudo,text="Sistema desenvolvido utilizando Programação Orientada a Objetos",
+            font=("Arial", 9),bg="#F2F5F9",fg="#777777")
+        rodape.pack(side="bottom",pady=15)
 
-        self.criar_botao(
-            botoes,
-            "📋 Contas cadastradas",
-            self.tela_contas,
-            1,
-            0
-        )
+    def criar_botao(self,frame,texto,comando,linha,coluna):
 
-        self.criar_botao(
-            botoes,
-            "📄 Extrato",
-            self.tela_extrato,
-            1,
-            1
-        )
+        botao = tk.Button(frame,text=texto,command=comando,width=25,height=3,
+            font=("Arial", 11, "bold"),bg="#1F5A94",fg="white",activebackground="#17446F",
+            activeforeground="white",relief="flat",cursor="hand2")
 
-        self.criar_botao(
-            botoes,
-            "❌ Sair",
-            self.janela.destroy,
-            2,
-            0
-        )
-
-        # Rodapé
-        rodape = tk.Label(
-            conteudo,
-            text="Sistema desenvolvido utilizando Programação Orientada a Objetos",
-            font=("Arial", 9),
-            bg="#F2F5F9",
-            fg="#777777"
-        )
-
-        rodape.pack(
-            side="bottom",
-            pady=15
-        )
-
-    def criar_botao(
-        self,
-        frame,
-        texto,
-        comando,
-        linha,
-        coluna
-    ):
-
-        botao = tk.Button(
-            frame,
-            text=texto,
-            command=comando,
-            width=25,
-            height=3,
-            font=("Arial", 11, "bold"),
-            bg="#1F5A94",
-            fg="white",
-            activebackground="#17446F",
-            activeforeground="white",
-            relief="flat",
-            cursor="hand2"
-        )
-
-        botao.grid(
-            row=linha,
-            column=coluna,
-            padx=15,
-            pady=15
-        )
+        botao.grid(row=linha,column=coluna,padx=15,pady=15)
 
     # TELA DE CADASTRO
 
@@ -388,43 +333,18 @@ class InterfaceGrafica:
         janela.geometry("500x550")
         janela.configure(bg="#F2F5F9")
 
-        tk.Label(
-            janela,
-            text="Cadastro de Conta",
-            font=("Arial", 20, "bold"),
-            bg="#F2F5F9",
-            fg="#17365D"
-        ).pack(pady=20)
+        tk.Label(janela,text="Cadastro de Conta",font=("Arial", 20, "bold"),bg="#F2F5F9",fg="#17365D").pack(pady=20)
 
-        # Tipo
-        tk.Label(
-            janela,
-            text="Tipo de conta:",
-            bg="#F2F5F9",
-            font=("Arial", 11)
-        ).pack()
+        tk.Label(janela,text="Tipo de conta:",bg="#F2F5F9",font=("Arial", 11)).pack()
 
-        tipo = ttk.Combobox(
-            janela,
-            values=["PF", "PJ"],
-            state="readonly",
-            width=30
-        )
+        tipo = ttk.Combobox(janela,values=["PF", "PJ"],state="readonly",width=30)
 
         tipo.pack(pady=5)
         tipo.set("PF")
 
-        # Documento
-        tk.Label(
-            janela,
-            text="CPF/CNPJ:",
-            bg="#F2F5F9"
-        ).pack()
+        tk.Label(janela,text="CPF/CNPJ:",bg="#F2F5F9").pack()
 
-        documento = tk.Entry(
-            janela,
-            width=33
-        )
+        documento = tk.Entry(janela,width=33)
 
         documento.pack(pady=5)
 
